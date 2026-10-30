@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClassVision - Student ERP Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    const user = JSON.parse(sessionStorage.getItem('classvision_user') || 'null');
+    if (!user || user.role !== 'STUDENT') {
+      window.location.href = '/login.html';
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6 flex flex-col items-center">
+  <div class="max-w-4xl w-full space-y-6">
+
+    <!-- Header Banner -->
+    <header class="flex justify-between items-center pb-4 border-b border-slate-800">
+      <div>
+        <span class="bg-sky-600/30 text-sky-400 border border-sky-500/40 text-xs px-2.5 py-0.5 rounded-full font-mono uppercase">Student Portal</span>
+        <h1 class="text-xl font-bold text-slate-100 mt-1">ClassVision Academic ERP</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <span class="text-xs text-slate-400">Bachelor of Computer Applications</span>
+          <div class="text-xs font-semibold text-emerald-400">Semester III &bull; 2026</div>
+        </div>
+        <button onclick="logout()" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl transition">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Student Info Card -->
+    <div id="studentCard" class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-5">
+        <div>
+          <h2 id="stName" class="text-xl font-bold text-slate-100">Loading...</h2>
+          <div class="flex gap-3 text-xs text-slate-400 mt-1 font-mono">
+            <span>Roll: <span id="stRoll" class="text-sky-400"></span></span>
+            <span>&bull;</span>
+            <span id="stBranch">BCA</span>
+            <span>&bull;</span>
+            <span id="stSem">3rd Sem</span>
+          </div>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 px-4 py-2 rounded-xl text-center">
+          <div class="text-xs text-slate-400">Overall Attendance</div>
+          <div id="stPercentage" class="text-2xl font-black text-emerald-400">100.0%</div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex gap-4 border-b border-slate-800 my-4 text-xs">
+        <button onclick="showTab('attView')" id="tAtt" class="py-2 border-b-2 border-sky-500 text-sky-400 font-medium">Subject Attendance</button>
+        <button onclick="showTab('timeView')" id="tTime" class="py-2 border-b-2 border-transparent text-slate-400 hover:text-white font-medium">Weekly Timetable</button>
+        <button onclick="showTab('marksView')" id="tMarks" class="py-2 border-b-2 border-transparent text-slate-400 hover:text-white font-medium">Sessional Marks</button>
+      </div>
+
+      <!-- Attendance Tab -->
+      <div id="attView">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="text-xs uppercase bg-slate-950/60 text-slate-400">
+              <tr>
+                <th class="px-4 py-2 rounded-l-lg">Subject Code</th>
+                <th class="px-4 py-2">Subject Name</th>
+                <th class="px-4 py-2 text-center">Attended</th>
+                <th class="px-4 py-2 text-center">Total</th>
+                <th class="px-4 py-2 rounded-r-lg text-right">Percentage</th>
+              </tr>
+            </thead>
+            <tbody id="subjectStatsBody" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Timetable Tab -->
+      <div id="timeView" class="hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="text-xs uppercase bg-slate-950/60 text-slate-400">
+              <tr>
+                <th class="px-4 py-2 rounded-l-lg">Day</th>
+                <th class="px-4 py-2">Time Slot</th>
+                <th class="px-4 py-2">Subject</th>
+                <th class="px-4 py-2">Faculty</th>
+                <th class="px-4 py-2 rounded-r-lg text-right">Room / Lab</th>
+              </tr>
+            </thead>
+            <tbody id="timetableBody" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Marks Tab -->
+      <div id="marksView" class="hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="text-xs uppercase bg-slate-950/60 text-slate-400">
+              <tr>
+                <th class="px-4 py-2 rounded-l-lg">Subject</th>
+                <th class="px-4 py-2">Assessment</th>
+                <th class="px-4 py-2 text-center">Obtained</th>
+                <th class="px-4 py-2 text-center">Max Marks</th>
+                <th class="px-4 py-2 rounded-r-lg text-right">Score %</th>
+              </tr>
+            </thead>
+            <tbody id="marksBody" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function logout() {
+      sessionStorage.removeItem('classvision_user');
+      window.location.href = '/login.html';
+    }
+
+    function showTab(tabId) {
+      ['attView', 'timeView', 'marksView'].forEach(t => document.getElementById(t).classList.toggle('hidden', t !== tabId));
+      document.getElementById('tAtt').className = tabId === 'attView' ? 'py-2 border-b-2 border-sky-500 text-sky-400 font-medium' : 'py-2 border-b-2 border-transparent text-slate-400 hover:text-white font-medium';
+      document.getElementById('tTime').className = tabId === 'timeView' ? 'py-2 border-b-2 border-sky-500 text-sky-400 font-medium' : 'py-2 border-b-2 border-transparent text-slate-400 hover:text-white font-medium';
+      document.getElementById('tMarks').className = tabId === 'marksView' ? 'py-2 border-b-2 border-sky-500 text-sky-400 font-medium' : 'py-2 border-b-2 border-transparent text-slate-400 hover:text-white font-medium';
+    }
+
+    async function loadStudentProfile() {
+      const activeUser = JSON.parse(sessionStorage.getItem('classvision_user'));
+      const roll = activeUser.username;
+
+      const res = await fetch(`/api/student/${roll}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      document.getElementById('stName').textContent = data.student.name;
+      document.getElementById('stRoll').textContent = data.student.roll_number;
+      document.getElementById('stBranch').textContent = data.student.branch;
+      document.getElementById('stSem').textContent = data.student.semester;
+
+      const pElem = document.getElementById('stPercentage');
+      pElem.textContent = data.overallPercentage + '%';
+      pElem.className = data.overallPercentage >= 75 ? 'text-2xl font-black text-emerald-400' : 'text-2xl font-black text-rose-400';
+
+      const atBody = document.getElementById('subjectStatsBody');
+      atBody.innerHTML = '';
+      data.subjectStats.forEach(s => {
+        const attended = s.attended || 0;
+        const total = s.total || 0;
+        const pct = total > 0 ? ((attended / total) * 100).toFixed(0) : "100";
+        atBody.innerHTML += `
+          <tr class="hover:bg-slate-800/40">
+            <td class="px-4 py-3 font-mono text-xs text-sky-400">${s.subject_code}</td>
+            <td class="px-4 py-3 font-medium text-slate-100">${s.subject_name}</td>
+            <td class="px-4 py-3 text-center text-slate-300">${attended}</td>
+            <td class="px-4 py-3 text-center text-slate-300">${total}</td>
+            <td class="px-4 py-3 text-right font-bold ${pct >= 75 ? 'text-emerald-400' : 'text-rose-400'}">${pct}%</td>
+          </tr>
+        `;
+      });
+
+      const ttRes = await fetch('/api/timetable');
+      const ttData = await ttRes.json();
+      const ttBody = document.getElementById('timetableBody');
+      ttBody.innerHTML = '';
+      ttData.forEach(row => {
+        ttBody.innerHTML += `
+          <tr class="hover:bg-slate-800/40">
+            <td class="px-4 py-3 text-xs font-semibold text-sky-300">${row.day_of_week}</td>
+            <td class="px-4 py-3 font-mono text-xs text-slate-300">${row.time_slot}</td>
+            <td class="px-4 py-3 font-medium text-slate-100">${row.subject_name} <span class="text-xs text-slate-500 font-mono">(${row.subject_code})</span></td>
+            <td class="px-4 py-3 text-xs text-slate-400">${row.faculty}</td>
+            <td class="px-4 py-3 text-right text-xs font-mono text-emerald-400">${row.room_no}</td>
+          </tr>
+        `;
+      });
+
+      const mRes = await fetch(`/api/marks/${roll}`);
+      const mData = await mRes.json();
+      const mBody = document.getElementById('marksBody');
+      mBody.innerHTML = '';
+      mData.forEach(m => {
+        const pct = ((m.obtained_marks / m.max_marks) * 100).toFixed(1);
+        mBody.innerHTML += `
+          <tr class="hover:bg-slate-800/40">
+            <td class="px-4 py-3 font-medium text-slate-100">${m.subject_name}</td>
+            <td class="px-4 py-3 text-xs text-sky-300">${m.exam_type}</td>
+            <td class="px-4 py-3 text-center font-bold text-slate-200">${m.obtained_marks}</td>
+            <td class="px-4 py-3 text-center text-slate-400">${m.max_marks}</td>
+            <td class="px-4 py-3 text-right font-bold text-emerald-400">${pct}%</td>
+          </tr>
+        `;
+      });
+    }
+
+    loadStudentProfile();
+  </script>
+</body>
+</html>

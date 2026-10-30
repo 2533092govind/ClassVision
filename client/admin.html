@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClassVision - Faculty Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6 flex flex-col items-center">
+  <div class="max-w-4xl w-full space-y-6">
+    <header class="flex justify-between items-center pb-4 border-b border-slate-800">
+      <div>
+        <h1 class="text-2xl font-bold text-sky-400">Faculty Session Manager</h1>
+        <p class="text-xs text-slate-400">ClassVision Lecture Control Panel</p>
+      </div>
+      <a href="/" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">Student View &rarr;</a>
+    </header>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Subject Code</label>
+        <select id="subjectSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200">
+          <option value="BCA-301">BCA-301 (Operating Systems)</option>
+          <option value="BCA-302">BCA-302 (Data Structures)</option>
+          <option value="BCA-303">BCA-303 (Computer Networks)</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Date</label>
+        <input type="date" id="dateInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Time Slot</label>
+        <select id="slotSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200">
+          <option value="09:00 AM">09:00 AM</option>
+          <option value="10:00 AM">10:00 AM</option>
+          <option value="11:30 AM">11:30 AM</option>
+          <option value="02:00 PM">02:00 PM</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button onclick="loadSession()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium py-2 rounded-xl text-sm transition">Check Attendance</button>
+      </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-200">Roster Status</h2>
+          <span id="sessionMeta" class="text-xs text-slate-400">Select session above</span>
+        </div>
+        <button id="exportBtn" onclick="exportToCSV()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-emerald-500/30 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Export CSV
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs uppercase bg-slate-950/60 text-slate-400">
+            <tr>
+              <th class="px-4 py-2 rounded-l-lg">Roll Number</th>
+              <th class="px-4 py-2">Student Name</th>
+              <th class="px-4 py-2 rounded-r-lg text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody id="rosterBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="3" class="px-4 py-4 text-center text-xs text-slate-500">No session loaded yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSessionRecords = [];
+
+    const now = new Date();
+    const localDate = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    document.getElementById('dateInput').value = localDate;
+
+    async function loadSession() {
+      const subject = document.getElementById('subjectSelect').value;
+      const date = document.getElementById('dateInput').value;
+      const slot = document.getElementById('slotSelect').value;
+      document.getElementById('sessionMeta').textContent = `${subject} | ${date} | ${slot}`;
+
+      const res = await fetch(`/api/attendance/session?subject_code=${subject}&date=${date}&slot=${encodeURIComponent(slot)}`);
+      currentSessionRecords = await res.json();
+      const tbody = document.getElementById('rosterBody');
+      const exportBtn = document.getElementById('exportBtn');
+      tbody.innerHTML = '';
+
+      if (!currentSessionRecords || currentSessionRecords.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-4 text-center text-xs text-slate-500">No attendance marked for this slot yet.</td></tr>`;
+        exportBtn.classList.add('hidden');
+        return;
+      }
+
+      exportBtn.classList.remove('hidden');
+
+      currentSessionRecords.forEach(row => {
+        const isPresent = row.status === 'PRESENT';
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-800/40">
+            <td class="px-4 py-3 font-mono text-xs">${row.roll_number}</td>
+            <td class="px-4 py-3 font-medium text-slate-100">${row.name}</td>
+            <td class="px-4 py-3 text-right">
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${isPresent ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                ${row.status}
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function exportToCSV() {
+      if (!currentSessionRecords.length) return;
+      const subject = document.getElementById('subjectSelect').value;
+      const date = document.getElementById('dateInput').value;
+      const slot = document.getElementById('slotSelect').value;
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Roll Number,Student Name,Subject,Date,Slot,Status\n";
+
+      currentSessionRecords.forEach(r => {
+        csvContent += `"${r.roll_number}","${r.name}","${subject}","${date}","${slot}","${r.status}"\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Attendance_${subject}_${date}_${slot.replace(/[: ]/g, "_")}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
