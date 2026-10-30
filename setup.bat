@@ -1,6 +1,6 @@
 @echo off
 echo ====================================================
-echo  ClassVision ERP & Biometric Attendance Setup
+echo  ClassVision ERP - Setup
 echo ====================================================
 echo.
 echo [1/2] Installing Node.js ERP backend dependencies...
@@ -20,6 +20,6 @@ cd ..
 
 echo.
 echo ====================================================
-echo  Setup Completed Successfully! Run 'run.bat' to start.
+echo  Setup Completed Successfully! Run run.bat to start.
 echo ====================================================
 pause
