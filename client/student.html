@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassVision // Student Digital ID & ERP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-panel: #111827;
+      --bg-card: #1f2937;
+      --border: #374151;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+    aside { width: 250px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 14px; gap: 20px; }
+    .brand { font-size: 1.15rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .nav-item a { display: flex; align-items: center; gap: 12px; padding: 11px 14px; color: var(--text-muted); text-decoration: none; border-radius: 8px; font-size: 0.88rem; font-weight: 500; }
+    .nav-item.active a { background: rgba(56, 189, 248, 0.12); color: var(--accent-blue); }
+
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    header { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+    .content-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* Digital ID Card (Institutional Look) */
+    .id-card-wrapper {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+    }
+    .id-left { display: flex; align-items: center; gap: 24px; }
+    .id-photo-placeholder {
+      width: 82px;
+      height: 82px;
+      border-radius: 10px;
+      background: #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      border: 2px solid #38bdf8;
+    }
+    .biometric-chip {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid #10b981;
+      color: #34d399;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Shortfall Notification Banner */
+    .shortfall-banner {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: none; /* Shown dynamically if < 75% */
+      align-items: center;
+      gap: 16px;
+    }
+    .shortfall-banner.active { display: flex; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .stat-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+    .stat-card span { font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+    .stat-card h3 { font-size: 1.7rem; font-weight: 700; }
+
+    .history-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; }
+    th { background: #1e293b; padding: 12px 14px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
+    td { padding: 12px 14px; border-bottom: 1px solid rgba(55, 65, 81, 0.5); }
+    .badge { padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; }
+    .badge-present { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-absent { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="brand"><i class="fa-solid fa-graduation-cap"></i> PSIT Student</div>
+    <ul class="nav-list">
+      <li class="nav-item active"><a href="/student.html"><i class="fa-solid fa-id-card"></i> Digital ID & Portal</a></li>
+      <li class="nav-item"><a href="/faculty.html"><i class="fa-solid fa-chalkboard-user"></i> Faculty Admin View</a></li>
+    </ul>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <h1 style="font-size: 1.25rem;">Student Attendance & Verified Audit Trail</h1>
+        <p style="font-size: 0.8rem; color: #9ca3af;">Pranveer Singh Institute of Technology &bull; Student Records</p>
+      </div>
+      <a href="/faculty.html" style="background: #2563eb; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">Faculty Portal &rarr;</a>
+    </header>
+
+    <div class="content-body">
+      <!-- Digital ID Card Section -->
+      <div class="id-card-wrapper">
+        <div class="id-left">
+          <div class="id-photo-placeholder" id="id-initials">GS</div>
+          <div>
+            <h2 id="st-name" style="font-size: 1.35rem; color: #fff;">Govind Singh</h2>
+            <p id="st-meta" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Roll: 25261102114 &bull; Dept: BCA &bull; Semester: 3rd Sem &bull; Section: BCA-3A</p>
+            <div style="font-size: 0.78rem; color: #38bdf8; margin-top: 6px;"><i class="fa-solid fa-envelope"></i> govind@psit.ac.in</div>
+          </div>
+        </div>
+        <div class="biometric-chip">
+          <i class="fa-solid fa-fingerprint"></i> BIOMETRICS ENROLLED & ACTIVE
+        </div>
+      </div>
+
+      <!-- 75% Attendance Shortfall Notification -->
+      <div class="shortfall-banner" id="shortfall-alert">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; color: #f59e0b;"></i>
+        <div>
+          <div style="font-weight: 700; color: #fcd34d; font-size: 0.95rem;">Attendance Shortfall Warning (< 75%)</div>
+          <div style="font-size: 0.82rem; color: #e2e8f0; margin-top: 2px;" id="shortfall-desc">
+            Your attendance is below the mandatory 75% threshold. You must attend the next consecutive lectures to qualify for semester examinations.
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span>Overall Attendance</span>
+          <h3 id="stat-pct" style="color: #10b981;">--%</h3>
+        </div>
+        <div class="stat-card">
+          <span>Classes Attended</span>
+          <h3 id="stat-attended" style="color: #38bdf8;">--</h3>
+        </div>
+        <div class="stat-card">
+          <span>Total Recorded</span>
+          <h3 id="stat-total" style="color: #f9fafb;">--</h3>
+        </div>
+        <div class="stat-card">
+          <span>Violations / Penalties</span>
+          <h3 id="stat-violations" style="color: #ef4444;">0</h3>
+        </div>
+      </div>
+
+      <!-- Verified Camera Audit Log -->
+      <div class="history-card">
+        <h3 style="font-size: 1.05rem; font-weight: 600;"><i class="fa-solid fa-clock-rotate-left"></i> Verified CCTV Audit Trail</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Lecture / Subject</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Telemetry Verification Remarks</th>
+            </tr>
+          </thead>
+          <tbody id="student-logs-tbody">
+            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px;">Loading profile records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function loadStudentData() {
+      try {
+        const res = await fetch('/api/student/25261102114');
+        const data = await res.json();
+
+        document.getElementById('st-name').innerText = data.profile.name;
+        document.getElementById('st-meta').innerText = `Roll: ${data.profile.roll_number} • Dept: ${data.profile.department} • Semester: ${data.profile.semester} • Section: ${data.profile.section}`;
+        document.getElementById('stat-pct').innerText = data.stats.attendance_percentage + '%';
+        document.getElementById('stat-attended').innerText = data.stats.attended;
+        document.getElementById('stat-total').innerText = data.stats.total_classes;
+        document.getElementById('stat-violations').innerText = data.stats.violations;
+
+        // Check Shortfall
+        const alertBox = document.getElementById('shortfall-alert');
+        if (data.stats.is_shortfall) {
+          alertBox.classList.add('active');
+          document.getElementById('shortfall-desc').innerText = `Your current attendance is ${data.stats.attendance_percentage}%. You need to attend ${data.stats.classes_needed_for_75} consecutive lectures without absence to reach the 75% criteria.`;
+          document.getElementById('stat-pct').style.color = '#ef4444';
+        } else {
+          alertBox.classList.remove('active');
+          document.getElementById('stat-pct').style.color = '#10b981';
+        }
+
+        const tbody = document.getElementById('student-logs-tbody');
+        if (data.history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 18px;">No surveillance entries registered today yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.history.map(h => {
+          const isAbsent = h.status === 'ABSENT';
+          return `
+            <tr>
+              <td><b>${h.subject}</b></td>
+              <td style="color: #94a3b8;">${h.date}</td>
+              <td style="color: #94a3b8;">${h.time}</td>
+              <td><span class="badge ${isAbsent ? 'badge-absent' : 'badge-present'}">${h.status}</span></td>
+              <td>${h.remarks}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadStudentData();
+    setInterval(loadStudentData, 3000);
+  </script>
+</body>
+</html>

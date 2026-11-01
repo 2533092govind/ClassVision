@@ -2,216 +2,258 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ClassVision - Faculty Academic Management</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    const user = JSON.parse(sessionStorage.getItem('classvision_user') || 'null');
-    if (!user || user.role !== 'FACULTY') {
-      window.location.href = '/login.html';
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassVision Pro // PSIT Faculty ERP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-panel: #111827;
+      --bg-card: #1f2937;
+      --border: #374151;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
     }
-  </script>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+    aside { width: 250px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 14px; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 700; color: #38bdf8; }
+    .brand span { font-size: 0.72rem; color: #10b981; background: #064e3b; padding: 2px 6px; border-radius: 4px; margin-left: auto; }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .nav-item a { display: flex; align-items: center; gap: 12px; padding: 11px 14px; color: var(--text-muted); text-decoration: none; border-radius: 8px; font-size: 0.88rem; font-weight: 500; }
+    .nav-item.active a { background: rgba(56, 189, 248, 0.12); color: var(--accent-blue); }
+
+    /* Dual Mode Switcher Widget in Sidebar */
+    .mode-switch-box { background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .mode-switch-box span { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+    .btn-mode-toggle { padding: 9px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+    .mode-lecture { background: #0f766e; color: #fff; }
+    .mode-exam { background: #991b1b; color: #fff; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.75; } }
+
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    header { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+    .content-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 24px; }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .metric-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+    .metric-card .label { font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+    .metric-card .val { font-size: 1.6rem; font-weight: 700; }
+
+    .surveillance-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+    .cctv-card { background: #000; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+    .cctv-header { background: rgba(17, 24, 39, 0.95); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; }
+    .cctv-card img { width: 100%; height: 290px; object-fit: contain; }
+
+    .ongoing-lecture-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+
+    .table-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .table-toolbar { display: flex; justify-content: space-between; align-items: center; }
+    .btn-export { background: #059669; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+
+    table.attendance-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; }
+    table.attendance-table th { background: #1e293b; padding: 12px 14px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
+    table.attendance-table td { padding: 12px 14px; border-bottom: 1px solid rgba(55, 65, 81, 0.5); }
+
+    .badge-btn { cursor: pointer; border: none; padding: 5px 12px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    .badge-present { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-absent { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-disqualified { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; }
+
+    .snapshot-link { color: #38bdf8; text-decoration: underline; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-6 flex flex-col items-center">
-  <div class="max-w-5xl w-full space-y-6">
-
-    <!-- Teacher Banner -->
-    <header class="flex justify-between items-center pb-4 border-b border-slate-800">
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 text-xs px-2.5 py-0.5 rounded-full font-mono uppercase">Faculty Portal</span>
-          <h1 class="text-xl font-bold text-slate-100">ClassVision Academic Administration</h1>
-        </div>
-        <p class="text-xs text-slate-400 mt-1">Instructor Session & Internal Assessment Panel</p><a href="/camera.html" class="inline-block mt-2 text-xs bg-sky-600 hover:bg-sky-500 text-white px-3 py-1 rounded-lg font-medium transition">&plus; Launch Live Attendance Camera</a>
-      </div>
-      <div class="flex items-center gap-4">
-        <div class="text-right">
-          <span class="text-xs text-slate-400">Department of Computer Applications</span>
-          <div class="text-xs font-semibold text-sky-400">Semester III &bull; 2026</div>
-        </div>
-        <button onclick="logout()" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl transition">Sign Out</button>
-      </div>
-    </header>
-
-    <!-- Navigation Tabs -->
-    <div class="flex gap-3 border-b border-slate-800 pb-2">
-      <button onclick="switchTab('attendanceTab')" id="btnAtt" class="px-4 py-1.5 rounded-lg text-xs font-medium bg-sky-600 text-white">Attendance Roster</button>
-      <button onclick="switchTab('marksTab')" id="btnMarks" class="px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-400 hover:text-white">Internal Assessment</button>
+<body>
+  <aside>
+    <div class="brand"><i class="fa-solid fa-graduation-cap"></i> PSIT ERP <span>PRO</span></div>
+    
+    <div class="mode-switch-box">
+      <span>Operational Mode</span>
+      <button id="mode-toggle-btn" class="btn-mode-toggle mode-lecture" onclick="toggleSystemMode()">
+        <i class="fa-solid fa-chalkboard"></i> <span id="mode-btn-text">LECTURE MODE</span>
+      </button>
     </div>
 
-    <!-- Attendance Module -->
-    <div id="attendanceTab" class="space-y-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Subject</label>
-          <select id="subjectSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200">
-            <option value="BCA3001T">BCA3001T (Python Programming)</option>
-            <option value="BCA3002T">BCA3002T (Operating Systems)</option>
-            <option value="BCA3003T">BCA3003T (Emerging Technologies)</option>
-            <option value="BCA3004T">BCA3004T (Internet and Web Technology)</option>
-            <option value="BCA3005T">BCA3005T (Software Engineering)</option>
-          </select>
+    <ul class="nav-list">
+      <li class="nav-item active"><a href="/faculty.html"><i class="fa-solid fa-chalkboard-user"></i> Faculty Portal</a></li>
+      <li class="nav-item"><a href="/enroll.html"><i class="fa-solid fa-user-plus"></i> Face Enrollment</a></li>`n      <li class="nav-item"><a href="/student.html"><i class="fa-solid fa-id-badge"></i> Student Portal</a></li>
+      <li class="nav-item"><a href="/camera.html"><i class="fa-solid fa-video"></i> Live HUD Monitor</a></li>
+    </ul>
+    <a href="/student.html" style="background: #2563eb; color: #fff; text-decoration: none; padding: 8px; border-radius: 6px; font-size: 0.8rem; text-align: center; font-weight: 600;">Student View &rarr;</a>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <h1 style="font-size: 1.3rem;">Faculty Attendance & Smart Surveillance Control</h1>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Pranveer Singh Institute of Technology &bull; BCA Department</p>
+      </div>
+      <div style="font-size: 0.85rem; color: #9ca3af;" id="clock-display">--:--:--</div>
+    </header>
+
+    <div class="content-body">
+      <div class="metrics-grid">
+        <div class="metric-card"><span class="label">Session Status</span><div class="val" id="metric-lecture" style="font-size: 1.15rem; color: #38bdf8;">--</div></div>
+        <div class="metric-card"><span class="label">Attention / Focus</span><div class="val" id="metric-attn" style="color: #34d399;">100%</div></div>
+        <div class="metric-card"><span class="label">Verified Present</span><div class="val" id="metric-present" style="color: #10b981;">0</div></div>
+        <div class="metric-card"><span class="label">Violations Logged</span><div class="val" id="metric-violations" style="color: #ef4444;">0</div></div>
+      </div>
+
+      <div class="surveillance-grid">
+        <div class="cctv-card">
+          <div class="cctv-header">
+            <span><i class="fa-solid fa-circle-dot" style="color: #ef4444;"></i> Classroom 302 Live AI Stream</span>
+            <span id="cctv-mode-badge" style="color: #38bdf8;">Active Mode: LECTURE</span>
+          </div>
+          <img src="/video_feed" alt="Surveillance Feed" />
         </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Lecture Date</label>
-          <input type="date" id="dateInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Time Slot</label>
-          <select id="slotSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200">
-            <option value="09:00 AM">09:00 AM - 10:00 AM</option>
-            <option value="10:00 AM">10:00 AM - 11:00 AM</option>
-            <option value="11:30 AM">11:30 AM - 12:30 PM</option>
-            <option value="01:30 PM">01:30 PM - 02:30 PM</option>
-          </select>
-        </div>
-        <div class="flex items-end">
-          <button onclick="loadSession()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium py-2 rounded-xl text-sm transition">Fetch Session</button>
+        <div class="ongoing-lecture-card">
+          <div>
+            <div id="session-tag" style="background: #0f766e; color: #5eead4; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; width: fit-content;">LECTURE SESSION</div>
+            <h2 id="ongoing-subject" style="margin-top: 10px; font-size: 1.25rem;">Data Structures</h2>
+            <p id="ongoing-period" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">Period: 1st (09:15 - 10:05)</p>
+          </div>
+          <div style="background: rgba(56, 189, 248, 0.08); padding: 12px; border-radius: 8px; font-size: 0.78rem; border: 1px solid rgba(56,189,248,0.2);">
+            <b>TTS Engine:</b> Voice reminders automatically notify students when mobile violations or cheating flags occur.
+          </div>
         </div>
       </div>
 
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-          <div>
-            <h2 class="text-sm font-semibold text-slate-200">Lecture Roster</h2>
-            <span id="sessionMeta" class="text-xs text-slate-400">Select session parameters</span>
-          </div>
-          <button id="exportBtn" onclick="exportToCSV()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">Export Sheet</button>
+      <!-- Attendance Table with Evidence Snapshots -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <h2 style="font-size: 1.05rem; font-weight: 600;">Live Attendance & Audit Evidence</h2>
+          <a href="/api/attendance/export" class="btn-export"><i class="fa-solid fa-file-excel"></i> Export Official Report (.CSV)</a>
         </div>
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="text-xs uppercase bg-slate-950/60 text-slate-400">
+        <table class="attendance-table">
+          <thead>
             <tr>
-              <th class="px-4 py-2">Roll Number</th>
-              <th class="px-4 py-2">Full Name</th>
-              <th class="px-4 py-2 text-right">Live Verification</th>
+              <th>Roll Number</th>
+              <th>Student Name</th>
+              <th>Subject / Session</th>
+              <th>Time</th>
+              <th>Status (Click to Override)</th>
+              <th>AI Verification Remarks</th>
+              <th>Audit Snapshot</th>
             </tr>
           </thead>
-          <tbody id="rosterBody" class="divide-y divide-slate-800/60">
-            <tr><td colspan="3" class="px-4 py-4 text-center text-xs text-slate-500">No session loaded yet.</td></tr>
+          <tbody id="roster-tbody">
+            <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 18px;">Waiting for scan logs...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
-
-    <!-- Marks Entry Module -->
-    <div id="marksTab" class="hidden space-y-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-5 gap-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Student Roll No</label>
-          <input type="text" id="mRoll" value="25261102114" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-mono" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Subject</label>
-          <select id="mSubject" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200">
-            <option value="BCA3001T">BCA3001T (Python Programming)</option>
-            <option value="BCA3002T">BCA3002T (Operating Systems)</option>
-            <option value="BCA3003T">BCA3003T (Emerging Technologies)</option>
-            <option value="BCA3004T">BCA3004T (Internet and Web Technology)</option>
-            <option value="BCA3005T">BCA3005T (Software Engineering)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Assessment Type</label>
-          <select id="mType" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200">
-            <option value="Sessional 1">Sessional 1</option>
-            <option value="Sessional 2">Sessional 2</option>
-            <option value="Lab Evaluation">Lab Evaluation</option>
-            <option value="Pre-University Test">Pre-University Test</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Marks (Obt / Max)</label>
-          <div class="flex gap-2">
-            <input type="number" id="mObt" placeholder="28" class="w-1/2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200" />
-            <input type="number" id="mMax" value="30" class="w-1/2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-400" />
-          </div>
-        </div>
-        <div class="flex items-end">
-          <button onclick="saveMark()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-xl text-sm transition">Record Mark</button>
-        </div>
-      </div>
-      <p id="markStatus" class="text-xs text-emerald-400"></p>
-    </div>
-
-  </div>
+  </main>
 
   <script>
-    let currentSessionRecords = [];
-    const now = new Date();
-    document.getElementById('dateInput').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    let currentMode = "LECTURE";
 
-    function logout() {
-      sessionStorage.removeItem('classvision_user');
-      window.location.href = '/login.html';
-    }
-
-    function switchTab(tabId) {
-      document.getElementById('attendanceTab').classList.toggle('hidden', tabId !== 'attendanceTab');
-      document.getElementById('marksTab').classList.toggle('hidden', tabId !== 'marksTab');
-      document.getElementById('btnAtt').className = tabId === 'attendanceTab' ? 'px-4 py-1.5 rounded-lg text-xs font-medium bg-sky-600 text-white' : 'px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-400 hover:text-white';
-      document.getElementById('btnMarks').className = tabId === 'marksTab' ? 'px-4 py-1.5 rounded-lg text-xs font-medium bg-sky-600 text-white' : 'px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-400 hover:text-white';
-    }
-
-    async function loadSession() {
-      const subject = document.getElementById('subjectSelect').value;
-      const date = document.getElementById('dateInput').value;
-      const slot = document.getElementById('slotSelect').value;
-      document.getElementById('sessionMeta').textContent = `${subject} | ${date} | ${slot}`;
-
-      const res = await fetch(`/api/attendance/session?subject_code=${subject}&date=${date}&slot=${encodeURIComponent(slot)}`);
-      currentSessionRecords = await res.json();
-      const tbody = document.getElementById('rosterBody');
-      const exportBtn = document.getElementById('exportBtn');
-      tbody.innerHTML = '';
-
-      if (!currentSessionRecords.length) {
-        tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-4 text-center text-xs text-slate-500">No records found.</td></tr>`;
-        exportBtn.classList.add('hidden');
-        return;
-      }
-
-      exportBtn.classList.remove('hidden');
-      currentSessionRecords.forEach(row => {
-        const isPresent = row.status === 'PRESENT';
-        tbody.innerHTML += `
-          <tr class="hover:bg-slate-800/40">
-            <td class="px-4 py-3 font-mono text-xs">${row.roll_number}</td>
-            <td class="px-4 py-3 font-medium text-slate-100">${row.name}</td>
-            <td class="px-4 py-3 text-right">
-              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${isPresent ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                ${row.status}
-              </span>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    async function saveMark() {
-      const payload = {
-        roll_number: document.getElementById('mRoll').value,
-        subject_code: document.getElementById('mSubject').value,
-        exam_type: document.getElementById('mType').value,
-        obtained_marks: parseFloat(document.getElementById('mObt').value),
-        max_marks: parseFloat(document.getElementById('mMax').value)
-      };
-      await fetch('/api/marks/update', {
+    async function toggleSystemMode() {
+      const nextMode = currentMode === "LECTURE" ? "EXAM_PROCTOR" : "LECTURE";
+      const res = await fetch('/api/mode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ mode: nextMode })
       });
-      document.getElementById('markStatus').textContent = `Success: Saved ${payload.obtained_marks}/${payload.max_marks} for ${payload.roll_number}`;
-      setTimeout(() => document.getElementById('markStatus').textContent = '', 3000);
+      const data = await res.json();
+      currentMode = data.mode;
+      updateModeUI();
     }
 
-    function exportToCSV() {
-      if (!currentSessionRecords.length) return;
-      let csv = "Roll Number,Name,Status\n";
-      currentSessionRecords.forEach(r => csv += `"${r.roll_number}","${r.name}","${r.status}"\n`);
-      const link = document.createElement("a");
-      link.href = encodeURI("data:text/csv;charset=utf-8," + csv);
-      link.download = `Session_Attendance.csv`;
-      link.click();
+    function updateModeUI() {
+      const btn = document.getElementById('mode-toggle-btn');
+      const text = document.getElementById('mode-btn-text');
+      const badge = document.getElementById('cctv-mode-badge');
+      const tag = document.getElementById('session-tag');
+
+      if (currentMode === "EXAM_PROCTOR") {
+        btn.className = "btn-mode-toggle mode-exam";
+        text.innerHTML = '<i class="fa-solid fa-shield-halved"></i> EXAM PROCTOR MODE';
+        badge.innerText = "Active Mode: EXAM PROCTOR (Zero Tolerance)";
+        badge.style.color = "#ef4444";
+        tag.innerText = "EXAM PROCTORING ACTIVE";
+        tag.style.background = "#991b1b";
+        tag.style.color = "#fecaca";
+      } else {
+        btn.className = "btn-mode-toggle mode-lecture";
+        text.innerHTML = '<i class="fa-solid fa-chalkboard"></i> LECTURE MODE';
+        badge.innerText = "Active Mode: LECTURE SURVEILLANCE";
+        badge.style.color = "#38bdf8";
+        tag.innerText = "LECTURE SESSION";
+        tag.style.background = "#0f766e";
+        tag.style.color = "#5eead4";
+      }
     }
+
+    async function toggleStatus(roll, currentStatus) {
+      const nextStatus = currentStatus === 'PRESENT' ? 'ABSENT' : 'PRESENT';
+      const note = prompt(`Override ${roll} to ${nextStatus}? Enter note:`, `Manual Override: Set to ${nextStatus}`);
+      if (note === null) return;
+
+      await fetch('/api/attendance/override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roll_number: roll, status: nextStatus, remarks: note })
+      });
+      syncData();
+    }
+
+    async function syncData() {
+      try {
+        const [telRes, attRes] = await Promise.all([fetch('/api/telemetry'), fetch('/api/attendance')]);
+        const tel = await telRes.json();
+        const records = await attRes.json();
+
+        currentMode = tel.mode;
+        updateModeUI();
+
+        document.getElementById('metric-attn').innerText = tel.class_attention_index + '%';
+        document.getElementById('metric-lecture').innerText = tel.current_lecture;
+        document.getElementById('ongoing-subject').innerText = tel.current_lecture;
+        document.getElementById('ongoing-period').innerText = tel.current_period;
+        document.getElementById('clock-display').innerText = new Date().toLocaleTimeString();
+
+        let present = 0, violations = 0;
+        const tbody = document.getElementById('roster-tbody');
+        if (records.length > 0) {
+          tbody.innerHTML = records.map(r => {
+            const isDisqualified = r.status === 'DISQUALIFIED';
+            const isAbsent = r.status === 'ABSENT' || isDisqualified;
+            if (!isAbsent) present++;
+            if (isAbsent || (r.remarks && (r.remarks.includes('Phone') || r.remarks.includes('Exam')))) violations++;
+
+            const badgeClass = isDisqualified ? 'badge-disqualified' : (isAbsent ? 'badge-absent' : 'badge-present');
+            const snapHtml = r.snapshot_url ? `<a href="${r.snapshot_url}" target="_blank" class="snapshot-link"><i class="fa-solid fa-image"></i> View Evidence</a>` : `<span style="color:#64748b;">None</span>`;
+
+            return `
+              <tr>
+                <td><b>${r.roll_number}</b></td>
+                <td>${r.name}</td>
+                <td><span style="color: #38bdf8;">${r.subject_code}</span></td>
+                <td style="color: #94a3b8;">${r.time}</td>
+                <td>
+                  <button class="badge-btn ${badgeClass}" onclick="toggleStatus('${r.roll_number}', '${r.status}')" title="Click to override">
+                    <i class="fa-solid ${isAbsent ? 'fa-circle-xmark' : 'fa-circle-check'}"></i> ${r.status}
+                  </button>
+                </td>
+                <td>${r.remarks}</td>
+                <td>${snapHtml}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+        document.getElementById('metric-present').innerText = present;
+        document.getElementById('metric-violations').innerText = violations;
+      } catch (e) {}
+    }
+
+    syncData();
+    setInterval(syncData, 2000);
   </script>
 </body>
 </html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassVision Pro // Dynamic Face Enrollment</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-panel: #111827;
+      --bg-card: #1f2937;
+      --border: #374151;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+    aside { width: 250px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 14px; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 700; color: #38bdf8; }
+    .brand span { font-size: 0.72rem; color: #10b981; background: #064e3b; padding: 2px 6px; border-radius: 4px; margin-left: auto; }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .nav-item a { display: flex; align-items: center; gap: 12px; padding: 11px 14px; color: var(--text-muted); text-decoration: none; border-radius: 8px; font-size: 0.88rem; font-weight: 500; }
+    .nav-item.active a { background: rgba(56, 189, 248, 0.12); color: var(--accent-blue); }
+
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    header { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+    .content-body { padding: 28px; display: flex; flex-direction: column; gap: 24px; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+    .form-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .form-title { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+    .form-control {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: var(--accent-blue); }
+
+    /* Upload & Preview Zone */
+    .upload-zone {
+      border: 2px dashed #374151;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      cursor: pointer;
+      background: #0f172a88;
+      position: relative;
+    }
+    .upload-zone:hover { border-color: var(--accent-blue); background: #0f172a; }
+    .preview-box {
+      width: 130px;
+      height: 130px;
+      border-radius: 10px;
+      border: 2px solid var(--accent-blue);
+      object-fit: cover;
+      display: none;
+    }
+
+    .btn-submit {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .btn-submit:hover { background: #0369a1; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .alert-banner {
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-success { background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; }
+    .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="brand"><i class="fa-solid fa-graduation-cap"></i> PSIT ERP <span>PRO</span></div>
+    <ul class="nav-list">
+      <li class="nav-item"><a href="/faculty.html"><i class="fa-solid fa-chalkboard-user"></i> Faculty Portal</a></li>
+      <li class="nav-item active"><a href="/enroll.html"><i class="fa-solid fa-user-plus"></i> Student Enrollment</a></li>
+      <li class="nav-item"><a href="/student.html"><i class="fa-solid fa-id-badge"></i> Student Portal</a></li>
+      <li class="nav-item"><a href="/camera.html"><i class="fa-solid fa-video"></i> Live HUD Scanner</a></li>
+    </ul>
+    <a href="/faculty.html" style="background: #1e293b; color: #38bdf8; text-decoration: none; padding: 8px; border-radius: 6px; font-size: 0.8rem; text-align: center; font-weight: 600;">&larr; Back to Dashboard</a>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <h1 style="font-size: 1.3rem;">On-The-Fly Student Facial Enrollment</h1>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Hot-patches facial embeddings directly into live memory without restarting server</p>
+      </div>
+      <div style="font-size: 0.85rem; color: #10b981;"><i class="fa-solid fa-bolt"></i> Zero Server Downtime</div>
+    </header>
+
+    <div class="content-body">
+      <div id="status-alert" class="alert-banner"></div>
+
+      <form id="enroll-form" class="form-card" onsubmit="handleEnroll(event)">
+        <div class="form-title"><i class="fa-solid fa-address-card" style="color: var(--accent-blue);"></i> Student Identity Information</div>
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Roll Number *</label>
+            <input type="text" id="roll_number" class="form-control" placeholder="e.g. 25261102115" required />
+          </div>
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="name" class="form-control" placeholder="e.g. Aarav Sharma" required />
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="department" class="form-control" value="BCA" required />
+          </div>
+          <div class="form-group">
+            <label>Semester</label>
+            <input type="text" id="semester" class="form-control" value="3rd Sem" required />
+          </div>
+          <div class="form-group">
+            <label>Section</label>
+            <input type="text" id="section" class="form-control" value="BCA-3A" required />
+          </div>
+          <div class="form-group">
+            <label>Institutional Email</label>
+            <input type="email" id="email" class="form-control" placeholder="aarav@psit.ac.in" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Facial Recognition Photo *</label>
+          <div class="upload-zone" onclick="document.getElementById('photo-input').click()">
+            <img id="image-preview" class="preview-box" alt="Face Preview" />
+            <div id="upload-prompt">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: #38bdf8; margin-bottom: 8px;"></i>
+              <div style="font-weight: 600; color: #fff;">Click to Upload Student Photo</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">PNG, JPG, or JPEG (Front-facing clear lighting)</div>
+            </div>
+          </div>
+          <input type="file" id="photo-input" accept="image/*" style="display: none;" onchange="previewFile(event)" required />
+        </div>
+
+        <button type="submit" id="btn-submit" class="btn-submit">
+          <i class="fa-solid fa-fingerprint"></i> Register & Cache Face Embeddings
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    function previewFile(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById('image-preview');
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          document.getElementById('upload-prompt').style.display = 'none';
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function handleEnroll(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit');
+      const alertBox = document.getElementById('status-alert');
+      const photoFile = document.getElementById('photo-input').files[0];
+
+      if (!photoFile) {
+        alert('Please choose a student photo.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing InsightFace Embedding...';
+      alertBox.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('photo', photoFile);
+      formData.append('roll_number', document.getElementById('roll_number').value.trim());
+      formData.append('name', document.getElementById('name').value.trim());
+      formData.append('department', document.getElementById('department').value.trim());
+      formData.append('semester', document.getElementById('semester').value.trim());
+      formData.append('section', document.getElementById('section').value.trim());
+      formData.append('email', document.getElementById('email').value.trim());
+
+      try {
+        const res = await fetch('/api/students/enroll', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+
+        alertBox.style.display = 'flex';
+        if (result.success) {
+          alertBox.className = 'alert-banner alert-success';
+          alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${result.message}`;
+          document.getElementById('enroll-form').reset();
+          document.getElementById('image-preview').style.display = 'none';
+          document.getElementById('upload-prompt').style.display = 'flex';
+        } else {
+          alertBox.className = 'alert-banner alert-error';
+          alertBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${result.error}`;
+        }
+      } catch (err) {
+        alertBox.style.display = 'flex';
+        alertBox.className = 'alert-banner alert-error';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Server connection failed.`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-fingerprint"></i> Register & Cache Face Embeddings';
+      }
+    }
+  </script>
+</body>
+</html>

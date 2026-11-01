@@ -1,8 +1,24 @@
-node_modules/
+# Virtual Environment
 venv/
+env/
+ENV/
+
+# Python Cache
 __pycache__/
-*.pyc
-*.pkl
-models/
-.DS_Store
-classvision.db
+*.py[cod]
+*$py.class
+
+# Large AI Weight Files
+*.pt
+*.onnx
+buffalo_l.zip
+
+# Audit captures & local temporary databases
+server/audit_snapshots/
+*.log
+
+# VS Code & OS files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
