@@ -1,24 +1,15 @@
-# Virtual Environment
 venv/
 env/
 ENV/
-
-# Python Cache
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Large AI Weight Files
 *.pt
 *.onnx
-buffalo_l.zip
-
-# Audit captures & local temporary databases
+*.zip
+*.tar.gz
+*.bin
+*.weights
 server/audit_snapshots/
 *.log
-
-# VS Code & OS files
 .vscode/
 .idea/
-Thumbs.db
-Desktop.ini
